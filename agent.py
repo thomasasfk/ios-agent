@@ -26,19 +26,19 @@ class BaseResponse(BaseModel):
     success: bool
 
 class CopyResponse(BaseResponse):
-    action: Literal["copy_to_clipboard"]
+    action: Literal["copy_to_clipboard"] = "copy_to_clipboard"
     clipboard_text: str
 
 class IPhoneAppResponse(BaseResponse):
-    action: Literal["open_iphone_app"]
+    action: Literal["open_iphone_app"] = "open_iphone_app"
     app_name: IPhoneApp
 
 class ShowResponse(BaseResponse):
-    action: Literal["show_response"]
+    action: Literal["show_response"] = "show_response"
     response_text: str
 
 class UnknownResponse(BaseResponse):
-    action: Literal["unknown_action"]
+    action: Literal["unknown_action"] = "unknown_action"
     error_message: Optional[str] = None
 
 
