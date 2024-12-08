@@ -1,0 +1,8 @@
+openai==1.54.3
+python-dotenv
+pydantic-ai-slim[openai]
+pydantic-ai[logfire]
+pydantic
+gunicorn
+logfire
+flask
