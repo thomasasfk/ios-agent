@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 from pydantic_ai import Agent
 from typing import Literal
 
+from pydantic_ai import RunContext
+
+from notes import NotesDB
+
 logfire.configure()
 load_dotenv()
 
@@ -45,7 +49,8 @@ class UnknownResponse(BaseResponse):
 ResponseType = Union[CopyResponse, IPhoneAppResponse, ShowResponse, UnknownResponse]
 
 
-class Dependencies: ...
+class Dependencies:
+    notes_db: NotesDB
 
 agent = Agent(
     "openai:gpt-4o-mini",
@@ -53,10 +58,15 @@ agent = Agent(
     result_type=ResponseType,
     system_prompt=textwrap.dedent("""
         Route user requests to supported actions or show responses for questions.
-        Return ShowResponse for general questions, use appropriate action responses
-        for commands, and UnknownResponse only for ambiguous requests.
+        Return ShowResponse for general questions or text responses.
+        Use appropriate action responses for commands, and UnknownResponse only for ambiguous requests.
     """)
 )
+
+@agent.tool
+def save_note(ctx: RunContext[Dependencies], content: str, category: str) -> int:
+    """saves a note in sqllite3 database, and returns the node id"""
+    return ctx.deps.notes_db.save_note(content, category)
 
 def run_agent(transcription: str) -> str:
     run_result = agent.run_sync(transcription, deps=Dependencies())
