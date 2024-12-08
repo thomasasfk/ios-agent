@@ -50,7 +50,7 @@ ResponseType = Union[CopyResponse, IPhoneAppResponse, ShowResponse, UnknownRespo
 
 
 class Dependencies:
-    notes_db: NotesDB
+    notes_db: NotesDB = NotesDB()
 
 agent = Agent(
     "openai:gpt-4o-mini",
