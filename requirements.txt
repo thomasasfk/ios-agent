@@ -1,4 +1,5 @@
 openai==1.54.3
+httpx==0.23.0
 python-dotenv
 pydantic-ai-slim[openai]
 pydantic-ai[logfire]
