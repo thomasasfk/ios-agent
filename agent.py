@@ -10,7 +10,7 @@ logfire.configure()
 load_dotenv()
 
 
-ActionType = Literal["copy_to_clipboard", "open_iphone_app", "unknown_action"]
+ActionType = Literal["copy_to_clipboard", "open_iphone_app", "show_response", "unknown_action"]
 IPhoneApp = Literal["Amazon", "Anki", "Arnold Clark", "Asda Rewards", "Authenticator", "Authy", "BS Companion",
                     "Bambu Handy", "Bitwarden", "BroadLink", "Calculator", "Calendar", "ChatGPT", "Claude", "Clock",
                     "Compass", "Connect", "Contacts", "Discord", "FaceTime", "Files", "Find My", "Fitness",
@@ -33,12 +33,16 @@ class IPhoneAppResponse(BaseResponse):
     action: Literal["open_iphone_app"]
     app_name: IPhoneApp
 
+class ShowResponse(BaseResponse):
+    action: Literal["show_response"]
+    response_text: str
+
 class UnknownResponse(BaseResponse):
     action: Literal["unknown_action"]
     error_message: Optional[str] = None
 
 
-ResponseType = Union[CopyResponse, IPhoneAppResponse, UnknownResponse]
+ResponseType = Union[CopyResponse, IPhoneAppResponse, ShowResponse, UnknownResponse]
 
 
 class Dependencies: ...
@@ -48,17 +52,11 @@ agent = Agent(
     deps_type=Dependencies,
     result_type=ResponseType,
     system_prompt=textwrap.dedent("""
-        Route user requests to supported actions. 
-        Map to appropriate response types and validate data.
-        For unsupported requests, return UnknownResponse with available actions. 
-        If you find an action, respond with the appropriate ResponseType.
-        Handle common variations in user phrasing.
+        Route user requests to supported actions or show responses for questions.
+        Return ShowResponse for general questions, use appropriate action responses
+        for commands, and UnknownResponse only for ambiguous requests.
     """)
 )
-
-# @agent.tool
-# def copy_to_clipboard(ctx: RunContext[Dependencies], text: str) -> ResponseType:
-#     return ctx.deps.copy_to_clipboard(text)
 
 def run_agent(transcription: str) -> str:
     run_result = agent.run_sync(transcription, deps=Dependencies())
