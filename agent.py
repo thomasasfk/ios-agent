@@ -68,6 +68,11 @@ def save_note(ctx: RunContext[Dependencies], content: str, category: str) -> int
     """saves a note in sqllite3 database, and returns the node id"""
     return ctx.deps.notes_db.save_note(content, category)
 
+@agent.tool
+def get_todays_notes(ctx: RunContext[Dependencies]) -> list[tuple]:
+    """gets notes for today"""
+    return ctx.deps.notes_db.get_todays_notes()
+
 def run_agent(transcription: str) -> str:
     run_result = agent.run_sync(transcription, deps=Dependencies())
     return run_result.data.model_dump_json()

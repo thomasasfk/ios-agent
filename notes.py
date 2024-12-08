@@ -30,3 +30,12 @@ class NotesDB:
             )
             conn.commit()
             return cursor.lastrowid
+
+    def get_todays_notes(self) -> list[tuple]:
+        today = datetime.now().date().isoformat()
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            return cursor.execute(
+                "SELECT content, category FROM notes WHERE DATE(created_at) = ?",
+                (today,)
+            ).fetchall()
