@@ -72,7 +72,9 @@ agent = Agent(
     "openai:gpt-4o-mini",
     deps_type=Dependencies,
     result_type=ResponseType,
-    system_prompt=textwrap.dedent(SYSTEM_PROMPT)
+    system_prompt=textwrap.dedent(SYSTEM_PROMPT),
+    result_retries=3,
+    retries=3,
 )
 
 @agent.tool
