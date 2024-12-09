@@ -1,4 +1,6 @@
 import textwrap
+from dataclasses import dataclass
+
 import logfire
 from typing import Optional, Union, Tuple
 from pydantic import BaseModel
@@ -11,7 +13,10 @@ from notes import NotesDB
 logfire.configure()
 load_dotenv()
 
-ActionType = Literal["copy_to_clipboard", "open_iphone_app", "show_response", "unknown_action"]
+CopyToClipboard = Literal["Copy to Clipboard"]
+OpeniPhoneApp = Literal["Open iPhone App"]
+ShowResponse = Literal["Show Response"]
+ActionType = CopyToClipboard | OpeniPhoneApp | ShowResponse
 IPhoneApp = Literal["Amazon", "Anki", "Arnold Clark", "Asda Rewards", "Authenticator", "Authy", "BS Companion",
                     "Bambu Handy", "Bitwarden", "BroadLink", "Calculator", "Calendar", "ChatGPT", "Claude", "Clock",
                     "Compass", "Connect", "Contacts", "Discord", "FaceTime", "Files", "Find My", "Fitness",
@@ -27,23 +32,20 @@ class BaseResponse(BaseModel):
     success: bool
 
 class CopyResponse(BaseResponse):
-    action: Literal["copy_to_clipboard"] = "copy_to_clipboard"
+    action: CopyToClipboard = "Copy to Clipboard"
     clipboard_text: str
 
 class IPhoneAppResponse(BaseResponse):
-    action: Literal["open_iphone_app"] = "open_iphone_app"
+    action: OpeniPhoneApp = "Open iPhone App"
     app_name: IPhoneApp
 
 class ShowResponse(BaseResponse):
-    action: Literal["show_response"] = "show_response"
+    action: ShowResponse = "Show Response"
     response_text: str
 
-class UnknownResponse(BaseResponse):
-    action: Literal["unknown_action"] = "unknown_action"
-    error_message: Optional[str] = None
+ResponseType = CopyResponse | IPhoneAppResponse | ShowResponse
 
-ResponseType = Union[CopyResponse, IPhoneAppResponse, ShowResponse, UnknownResponse]
-
+@dataclass
 class Dependencies:
     notes_db: NotesDB = NotesDB()
 
@@ -63,8 +65,7 @@ For note management:
 For other actions:
 - Return CopyResponse for clipboard operations
 - Return IPhoneAppResponse for app opening requests
-- Return ShowResponse for general questions
-- Use UnknownResponse only for ambiguous requests
+- Return ShowResponse for general questions or ambiguous requests
 """
 
 agent = Agent(
