@@ -2,10 +2,12 @@ import sqlite3
 from datetime import datetime
 from dataclasses import dataclass
 
+import logfire
 from flask.cli import load_dotenv
 from pydantic import BaseModel
 from pydantic_ai import Agent, RunContext
 
+logfire.configure()
 load_dotenv()
 
 class NotesDB:
