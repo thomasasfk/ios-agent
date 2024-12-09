@@ -43,8 +43,8 @@ def transcribe_audio():
                 file=audio_file,
                 response_format="text"
             )
-            result = run_agent(transcription)
-            return result
+            _ = run_agent(transcription)
+            return transcription
     finally:
         if temp_file and os.path.exists(temp_file.name):
             os.unlink(temp_file.name)
