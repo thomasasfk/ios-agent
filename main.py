@@ -53,7 +53,7 @@ def transcribe_audio():
 @app.route('/download-database', methods=['GET'])
 @require_auth_header
 def serve_database_file():
-    database_path = './.notes.database'
+    database_path = f'./.notes.db'
     if not os.path.exists(database_path):
         return jsonify({'error': 'Database file not found'}), 404
 

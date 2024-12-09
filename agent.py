@@ -1,8 +1,12 @@
 import sqlite3
 from datetime import datetime
 from dataclasses import dataclass
+
+from flask.cli import load_dotenv
 from pydantic import BaseModel
 from pydantic_ai import Agent, RunContext
+
+load_dotenv()
 
 class NotesDB:
     def __init__(self, db_path: str = ".notes.db"):
