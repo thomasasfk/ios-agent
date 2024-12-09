@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify, send_file
 import os, tempfile, openai
 from flask.cli import load_dotenv
 from functools import wraps
-from agent import run_agent
+
+from notes import NotesDB
 
 load_dotenv()
 app = Flask(__name__)
@@ -26,6 +27,7 @@ def require_auth_header(f):
 
     return decorated_function
 
+NOTES_DB = NotesDB()
 
 @app.route('/transcribe', methods=['POST'])
 @require_auth_header
@@ -43,7 +45,7 @@ def transcribe_audio():
                 file=audio_file,
                 response_format="text"
             )
-            _ = run_agent(transcription)
+            _ = NOTES_DB.create_note(transcription)
             return transcription
     finally:
         if temp_file and os.path.exists(temp_file.name):
