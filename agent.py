@@ -66,6 +66,7 @@ For other actions:
 - Return CopyResponse for clipboard operations
 - Return IPhoneAppResponse for app opening requests
 - Return ShowResponse for general questions or ambiguous requests
+- When returning ShowResponse, don't return markdown, plaintext only
 """
 
 agent = Agent(
