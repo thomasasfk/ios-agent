@@ -53,7 +53,7 @@ SYSTEM_PROMPT = """
 You are a personal assistant that manages notes and handles various actions. You can:
 1. Create new notes
 2. Update the current working note
-3. View today's notes
+3. View the current note (retrieve information from it get_current_note())
 4. Handle other actions like copying to clipboard or opening iPhone apps
 
 For note management:
