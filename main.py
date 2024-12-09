@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import os, tempfile, openai
 from flask.cli import load_dotenv
 from functools import wraps
@@ -12,6 +12,7 @@ HEADER_VALUE = os.getenv('HEADER_VALUE')
 
 BANNED_IPS = set()
 
+
 def require_auth_header(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -22,7 +23,9 @@ def require_auth_header(f):
             return f(*args, **kwargs)
         BANNED_IPS.add(client_ip)
         return {}, 403
+
     return decorated_function
+
 
 @app.route('/transcribe', methods=['POST'])
 @require_auth_header
@@ -36,15 +39,26 @@ def transcribe_audio():
         temp_file.close()
         with open(temp_file.name, 'rb') as audio_file:
             transcription = openai.audio.translations.create(
-              model="whisper-1",
-              file=audio_file,
-              response_format="text"
+                model="whisper-1",
+                file=audio_file,
+                response_format="text"
             )
             result = run_agent(transcription)
             return result
     finally:
         if temp_file and os.path.exists(temp_file.name):
             os.unlink(temp_file.name)
+
+
+@app.route('/download-database', methods=['GET'])
+@require_auth_header
+def serve_database_file():
+    database_path = './.notes.database'
+    if not os.path.exists(database_path):
+        return jsonify({'error': 'Database file not found'}), 404
+
+    return send_file(database_path, as_attachment=True)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=1337)
