@@ -1,18 +1,15 @@
 import textwrap
 import logfire
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext
 from typing import Literal
-
-from pydantic_ai import RunContext
 
 from notes import NotesDB
 
 logfire.configure()
 load_dotenv()
-
 
 ActionType = Literal["copy_to_clipboard", "open_iphone_app", "show_response", "unknown_action"]
 IPhoneApp = Literal["Amazon", "Anki", "Arnold Clark", "Asda Rewards", "Authenticator", "Authy", "BS Companion",
@@ -45,34 +42,54 @@ class UnknownResponse(BaseResponse):
     action: Literal["unknown_action"] = "unknown_action"
     error_message: Optional[str] = None
 
-
 ResponseType = Union[CopyResponse, IPhoneAppResponse, ShowResponse, UnknownResponse]
-
 
 class Dependencies:
     notes_db: NotesDB = NotesDB()
+
+SYSTEM_PROMPT = """
+You are a personal assistant that manages notes and handles various actions. You can:
+1. Create new notes
+2. Update the current working note
+3. View today's notes
+4. Handle other actions like copying to clipboard or opening iPhone apps
+
+For note management:
+- When asked to create a new note, use create_note()
+- When asked to update the current note, use update_current_note()
+- Always include any existing note content when updating
+- Return appropriate ShowResponse for note operations
+
+For other actions:
+- Return CopyResponse for clipboard operations
+- Return IPhoneAppResponse for app opening requests
+- Return ShowResponse for general questions
+- Use UnknownResponse only for ambiguous requests
+"""
 
 agent = Agent(
     "openai:gpt-4o-mini",
     deps_type=Dependencies,
     result_type=ResponseType,
-    system_prompt=textwrap.dedent("""
-        Route user requests to supported actions or show responses for questions.
-        Return ShowResponse for general questions or text responses.
-        Use appropriate action responses for commands, and UnknownResponse only for ambiguous requests.
-    """)
+    system_prompt=textwrap.dedent(SYSTEM_PROMPT)
 )
 
 @agent.tool
-def save_note(ctx: RunContext[Dependencies], content: str, category: str) -> int:
-    """saves a note in sqllite3 database, and returns the node id"""
-    return ctx.deps.notes_db.save_note(content, category)
+def create_note(ctx: RunContext[Dependencies], initial_content: str = "") -> int:
+    """Creates a new note and makes it the current note. Returns the note ID."""
+    return ctx.deps.notes_db.create_note(initial_content)
 
 @agent.tool
-def get_todays_notes(ctx: RunContext[Dependencies]) -> list[tuple]:
-    """gets notes for today"""
-    return ctx.deps.notes_db.get_todays_notes()
+def get_current_note(ctx: RunContext[Dependencies]) -> Optional[Tuple[int, str, str, str]]:
+    """Gets the current note's details (id, content, created_at, updated_at)"""
+    return ctx.deps.notes_db.get_current_note()
+
+@agent.tool
+def update_current_note(ctx: RunContext[Dependencies], new_content: str) -> Optional[int]:
+    """Updates the current note with new content. Returns the note ID or None if no current note."""
+    return ctx.deps.notes_db.update_current_note(new_content)
 
 def run_agent(transcription: str) -> str:
+    """Runs the agent with the given transcription and returns the response as JSON"""
     run_result = agent.run_sync(transcription, deps=Dependencies())
     return run_result.data.model_dump_json()
