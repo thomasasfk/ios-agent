@@ -77,13 +77,6 @@ class NotesDB:
             )
             note_id = cursor.lastrowid
 
-            cursor.execute(
-                """INSERT INTO note_history 
-                   (note_id, content, created_at, version)
-                   VALUES (?, ?, ?, 1)""",
-                (note_id, initial_content, now)
-            )
-
             conn.commit()
             return note_id
 
