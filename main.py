@@ -45,6 +45,5 @@ def transcribe_audio():
         save_note(transcription)
         return transcription
 
-if __name__ == "__main__":
-    init_db()
-    app.run(debug=bool(os.getenv("DEBUG")), host="0.0.0.0", port=1337)
+init_db()
+app.run(debug=bool(os.getenv("DEBUG")), host="0.0.0.0", port=1337)
