@@ -79,14 +79,14 @@ agent = Agent(
     system_prompt=SYSTEM_PROMPT,
 )
 
-@agent.tool
+@agent.tool_plain
 def log_nutrition(food_name: str, calories: Optional[int] = None,
                  protein: Optional[float] = None, fats: Optional[float] = None,
                  carbs: Optional[float] = None) -> int:
     """Logs nutrition information for a food item to the database."""
     return log_nutrition_to_db(food_name, calories, protein, fats, carbs)
 
-@agent.tool
+@agent.tool_plain
 def log_weight(weight_kg: float) -> int:
     """Logs a weight measurement to the database."""
     return log_weight_to_db(weight_kg)
