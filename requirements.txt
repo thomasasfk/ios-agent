@@ -5,6 +5,7 @@ pydantic-ai-slim[openai]
 pydantic-ai[logfire]
 pydantic
 datasette
+loguru
 gunicorn
 logfire
 flask
