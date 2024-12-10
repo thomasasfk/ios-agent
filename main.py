@@ -1,66 +1,52 @@
-from flask import Flask, request, jsonify, send_file
+import sqlite3
+from datetime import datetime
+from flask import Flask, request, jsonify
 import os, tempfile, openai
 from flask.cli import load_dotenv
 from functools import wraps
 
-from notes import NotesDB
-
 load_dotenv()
 app = Flask(__name__)
 openai.api_key = os.getenv('OPENAI_API_KEY')
-HEADER_KEY = os.getenv('HEADER_KEY')
-HEADER_VALUE = os.getenv('HEADER_VALUE')
-
 BANNED_IPS = set()
 
+def init_db(db_path=".notes.db"):
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            transcription TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL)""")
+
+def save_note(transcription, db_path=".notes.db"):
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("INSERT INTO notes VALUES (NULL, ?, ?)",
+                    (transcription, datetime.now().isoformat()))
 
 def require_auth_header(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
-        client_ip = request.remote_addr
-        if client_ip in BANNED_IPS:
-            return {}, 403
-        if request.headers.get(HEADER_KEY) == HEADER_VALUE:
+    def decorated(*args, **kwargs):
+        if request.remote_addr in BANNED_IPS: return {}, 403
+        if request.headers.get(os.getenv('HEADER_KEY')) == os.getenv('HEADER_VALUE'):
             return f(*args, **kwargs)
-        BANNED_IPS.add(client_ip)
+        BANNED_IPS.add(request.remote_addr)
         return {}, 403
-
-    return decorated_function
-
-NOTES_DB = NotesDB()
+    return decorated
 
 @app.route('/transcribe', methods=['POST'])
 @require_auth_header
 def transcribe_audio():
-    temp_file = None
-    try:
-        if not request.data:
-            return jsonify({'error': 'No audio data'}), 400
-        temp_file = tempfile.NamedTemporaryFile(suffix='.m4a', delete=False)
+    with tempfile.NamedTemporaryFile(suffix='.m4a', delete=True) as temp_file:
         temp_file.write(request.data)
-        temp_file.close()
+        temp_file.flush()
         with open(temp_file.name, 'rb') as audio_file:
             transcription = openai.audio.translations.create(
                 model="whisper-1",
                 file=audio_file,
                 response_format="text"
             )
-            _ = NOTES_DB.create_note(transcription)
+            save_note(transcription)
             return transcription
-    finally:
-        if temp_file and os.path.exists(temp_file.name):
-            os.unlink(temp_file.name)
-
-
-@app.route('/download-database', methods=['GET'])
-@require_auth_header
-def serve_database_file():
-    database_path = f'./.notes.db'
-    if not os.path.exists(database_path):
-        return jsonify({'error': 'Database file not found'}), 404
-
-    return send_file(database_path, as_attachment=True)
-
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True, host='0.0.0.0', port=1337)

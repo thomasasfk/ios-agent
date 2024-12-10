@@ -4,6 +4,7 @@ python-dotenv
 pydantic-ai-slim[openai]
 pydantic-ai[logfire]
 pydantic
+datasette
 gunicorn
 logfire
 flask
