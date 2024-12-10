@@ -2,11 +2,13 @@ import time
 import sqlite3
 from typing import Optional
 
+import logfire
 from dotenv import load_dotenv
 from pydantic_ai import Agent
 from datetime import datetime
 
 load_dotenv()
+logfire.configure()
 
 DB_PATH = ".info.db"
 
