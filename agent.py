@@ -1,8 +1,12 @@
 import time
 import sqlite3
 from typing import Optional
+
+from dotenv import load_dotenv
 from pydantic_ai import Agent
 from datetime import datetime
+
+load_dotenv()
 
 DB_PATH = ".info.db"
 
