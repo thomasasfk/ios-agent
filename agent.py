@@ -5,6 +5,7 @@ def process(transcription: str):
     print(transcription)
 
 def main():
+    print("starting")
     conn = sqlite3.connect(".notes.db")
     cursor = conn.cursor()
     cursor.execute("SELECT MAX(id) FROM notes")
